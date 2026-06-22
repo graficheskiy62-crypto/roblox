@@ -5,7 +5,6 @@
     <title>Roblox-стиль: Прыжки по платформам</title>
     <style>
         body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
-        /* Панель со статистикой слева */
         #ui {
             position: absolute; top: 10px; left: 10px; color: white;
             background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px;
@@ -13,7 +12,6 @@
         }
         #score { font-size: 20px; font-weight: bold; color: #ffeb3b; }
         #coins { font-size: 20px; font-weight: bold; color: #FFD700; margin-top: 5px; }
-        /* Кнопка магазина справа сверху */
         #shopBtn {
             position: absolute; top: 10px; right: 10px;
             background: linear-gradient(135deg, #FFD700, #FFA000);
@@ -24,14 +22,13 @@
         }
         #shopBtn:hover { transform: scale(1.05); }
         #shopBtn:active { transform: scale(0.95); }
-        /* Панель магазина */
         #shop {
             display: none; position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             background: rgba(20, 20, 40, 0.95); color: white;
             padding: 25px; border-radius: 12px; min-width: 320px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-            border: 2px solid #FFD700;
+            border: 2px solid #FFD700; z-index: 10;
         }
         #shop h2 { margin: 0 0 15px 0; text-align: center; color: #FFD700; }
         .shop-item {
@@ -49,23 +46,22 @@
             border-radius: 6px; cursor: pointer; font-weight: bold;
             min-width: 100px;
         }
-        .buy-btn:disabled {
-            background: #555; cursor: not-allowed; color: #999;
-        }
+        .buy-btn:disabled { background: #555; cursor: not-allowed; color: #999; }
         .buy-btn:not(:disabled):hover { filter: brightness(1.1); }
         #closeShop {
             background: #f44336; color: white; border: none;
             padding: 8px 16px; border-radius: 6px; cursor: pointer;
             width: 100%; margin-top: 10px; font-weight: bold;
         }
-        /* Сообщение о рестарте */
+        /* ⭐ Сообщение о смерти от медведя */
         #restartMsg {
             display: none; position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%); color: white; font-size: 32px;
-            font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-            pointer-events: none;
+            transform: translate(-50%, -50%); color: #ff5252; font-size: 36px;
+            font-weight: bold; text-shadow: 3px 3px 6px rgba(0,0,0,0.9);
+            pointer-events: none; text-align: center;
+            background: rgba(0,0,0,0.6); padding: 20px 30px; border-radius: 12px;
+            border: 3px solid #ff5252;
         }
-        /* Всплывающее уведомление о монете */
         .coin-popup {
             position: absolute; color: #FFD700; font-size: 24px; font-weight: bold;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
@@ -78,7 +74,6 @@
     </style>
 </head>
 <body>
-    <!-- Левая панель со статистикой -->
     <div id="ui">
         <div id="score">Платформы: 0</div>
         <div id="coins">🪙 Монеты: 0</div>
@@ -89,10 +84,8 @@
         </div>
     </div>
 
-    <!-- Кнопка магазина -->
     <button id="shopBtn">🛒 Магазин</button>
 
-    <!-- Панель магазина -->
     <div id="shop">
         <h2>🛒 Магазин улучшений</h2>
         <div class="shop-item">
@@ -114,11 +107,11 @@
         <button id="closeShop">Закрыть</button>
     </div>
 
-    <div id="restartMsg">РЕСТАРТ!</div>
+    <!-- ⭐ Новое сообщение о смерти -->
+    <div id="restartMsg">Газан 67 умер от медведя 🐻💀</div>
 
     <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
     <script>
-        // ==================== НАСТРОЙКА СЦЕНЫ ====================
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x87CEEB);
         scene.fog = new THREE.Fog(0x87CEEB, 30, 120);
@@ -130,7 +123,6 @@
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.body.appendChild(renderer.domElement);
 
-        // ==================== ОСВЕЩЕНИЕ ====================
         const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
         sunLight.position.set(20, 40, 20);
         sunLight.castShadow = true;
@@ -145,105 +137,124 @@
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         scene.add(ambientLight);
 
-        // ==================== ПЕРСОНАЖ (ДЕТАЛЬНАЯ ПРОРАБОТКА) ====================
         const player = new THREE.Group();
-        
-        // Материалы
-        const skinMat = new THREE.MeshLambertMaterial({ color: 0xffcc99 }); // кожа
-        const shirtMat = new THREE.MeshLambertMaterial({ color: 0x2196F3 }); // синяя футболка
-        const pantsMat = new THREE.MeshLambertMaterial({ color: 0x3f51b5 }); // синие штаны
-        const shoeMat = new THREE.MeshLambertMaterial({ color: 0x222222 }); // чёрные ботинки
-        const hatMat = new THREE.MeshLambertMaterial({ color: 0xE53935 }); // красная шапка
-        const eyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff }); // белки глаз
-        const pupilMat = new THREE.MeshBasicMaterial({ color: 0x000000 }); // зрачки
-        const browMat = new THREE.MeshBasicMaterial({ color: 0x3e2723 }); // брови
-        const backpackMat = new THREE.MeshLambertMaterial({ color: 0x8D6E63 }); // рюкзак
-        const beltMat = new THREE.MeshLambertMaterial({ color: 0x4E342E }); // пояс
-        const logoMat = new THREE.MeshBasicMaterial({ color: 0xFFEB3B }); // жёлтый значок
 
-        // --- ГОЛОВА ---
+        const skinMat = new THREE.MeshLambertMaterial({ color: 0xffcc99 });
+        const shirtMat = new THREE.MeshLambertMaterial({ color: 0x2196F3 });
+        const pantsMat = new THREE.MeshLambertMaterial({ color: 0x3f51b5 });
+        const shoeMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
+        const hatMat = new THREE.MeshLambertMaterial({ color: 0xE53935 });
+        const eyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const pupilMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        const browMat = new THREE.MeshBasicMaterial({ color: 0x3e2723 });
+        const backpackMat = new THREE.MeshLambertMaterial({ color: 0x8D6E63 });
+        const beltMat = new THREE.MeshLambertMaterial({ color: 0x4E342E });
+        const logoMat = new THREE.MeshBasicMaterial({ color: 0xFFEB3B });
+        const propellerMat = new THREE.MeshLambertMaterial({ color: 0xFFEB3B });
+        const propellerCenterMat = new THREE.MeshLambertMaterial({ color: 0x424242 });
+        const mouthInsideMat = new THREE.MeshBasicMaterial({ color: 0x8B0000 });
+
+        const headGroup = new THREE.Group();
+        headGroup.position.y = 2.5;
+
         const head = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), skinMat);
-        head.position.y = 2.5; head.castShadow = true; player.add(head);
+        head.castShadow = true;
+        headGroup.add(head);
 
-        // Белки глаз
         const leftEyeWhite = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.05), eyeWhiteMat);
-        leftEyeWhite.position.set(-0.2, 2.55, 0.51); player.add(leftEyeWhite);
+        leftEyeWhite.position.set(-0.2, 0.05, 0.51); headGroup.add(leftEyeWhite);
         const rightEyeWhite = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.05), eyeWhiteMat);
-        rightEyeWhite.position.set(0.2, 2.55, 0.51); player.add(rightEyeWhite);
+        rightEyeWhite.position.set(0.2, 0.05, 0.51); headGroup.add(rightEyeWhite);
 
-        // Зрачки (чуть меньше, поверх белков)
         const leftPupil = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.06), pupilMat);
-        leftPupil.position.set(-0.2, 2.55, 0.54); player.add(leftPupil);
+        leftPupil.position.set(-0.2, 0.05, 0.54); headGroup.add(leftPupil);
         const rightPupil = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.06), pupilMat);
-        rightPupil.position.set(0.2, 2.55, 0.54); player.add(rightPupil);
+        rightPupil.position.set(0.2, 0.05, 0.54); headGroup.add(rightPupil);
 
-        // Брови (над глазами)
         const leftBrow = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.06, 0.05), browMat);
-        leftBrow.position.set(-0.2, 2.7, 0.51); player.add(leftBrow);
+        leftBrow.position.set(-0.2, 0.2, 0.51); headGroup.add(leftBrow);
         const rightBrow = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.06, 0.05), browMat);
-        rightBrow.position.set(0.2, 2.7, 0.51); player.add(rightBrow);
+        rightBrow.position.set(0.2, 0.2, 0.51); headGroup.add(rightBrow);
 
-        // Улыбка
         const smile = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.08, 0.05), pupilMat);
-        smile.position.set(0, 2.3, 0.51); player.add(smile);
+        smile.position.set(0, -0.2, 0.51); headGroup.add(smile);
 
-        // --- ШАПКА (бейсболка) ---
-        // Основа шапки
+        const mouthOpen = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.25, 0.06), mouthInsideMat);
+        mouthOpen.position.set(0, -0.22, 0.51);
+        mouthOpen.visible = false;
+        headGroup.add(mouthOpen);
+        const mouthBorder = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.32, 0.04), pupilMat);
+        mouthBorder.position.set(0, -0.22, 0.49);
+        mouthBorder.visible = false;
+        headGroup.add(mouthBorder);
+
         const hatTop = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.3, 1.05), hatMat);
-        hatTop.position.y = 3.15; hatTop.castShadow = true; player.add(hatTop);
-        // Козырёк
+        hatTop.position.y = 0.65; hatTop.castShadow = true; headGroup.add(hatTop);
         const hatBrim = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.08, 0.4), hatMat);
-        hatBrim.position.set(0, 3.0, 0.6); hatBrim.castShadow = true; player.add(hatBrim);
+        hatBrim.position.set(0, 0.5, 0.6); hatBrim.castShadow = true; headGroup.add(hatBrim);
 
-        // --- ТОРС ---
+        const propellerGroup = new THREE.Group();
+        propellerGroup.position.set(0, 0.85, 0);
+        const propellerCenter = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.15, 8), propellerCenterMat);
+        propellerCenter.castShadow = true; propellerGroup.add(propellerCenter);
+        const blade1 = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.05, 0.15), propellerMat);
+        blade1.castShadow = true; propellerGroup.add(blade1);
+        const blade2 = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.05, 0.15), propellerMat);
+        blade2.rotation.y = Math.PI / 2; blade2.castShadow = true; propellerGroup.add(blade2);
+        headGroup.add(propellerGroup);
+
+        player.add(headGroup);
+
         const torso = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.4, 0.7), shirtMat);
         torso.position.y = 1.3; torso.castShadow = true; player.add(torso);
 
-        // Жёлтый значок на футболке (звезда/круг)
         const logo = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.05), logoMat);
         logo.position.set(0, 1.5, 0.36); player.add(logo);
 
-        // Пояс
         const belt = new THREE.Mesh(new THREE.BoxGeometry(1.22, 0.15, 0.72), beltMat);
         belt.position.y = 0.6; belt.castShadow = true; player.add(belt);
-        // Пряжка пояса
         const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 0.05), logoMat);
         buckle.position.set(0, 0.6, 0.37); player.add(buckle);
 
-        // --- РУКИ ---
+        const leftArmGroup = new THREE.Group();
+        leftArmGroup.position.set(-0.8, 2.0, 0);
         const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.4, 0.7), shirtMat);
-        leftArm.position.set(-0.8, 1.3, 0); leftArm.castShadow = true; player.add(leftArm);
-        const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.4, 0.7), shirtMat);
-        rightArm.position.set(0.8, 1.3, 0); rightArm.castShadow = true; player.add(rightArm);
-
-        // Кисти рук (кожа, снизу рукава)
+        leftArm.position.y = -0.7; leftArm.castShadow = true; leftArmGroup.add(leftArm);
         const leftHand = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 0.7), skinMat);
-        leftHand.position.set(-0.8, 0.45, 0); leftHand.castShadow = true; player.add(leftHand);
+        leftHand.position.y = -1.55; leftHand.castShadow = true; leftArmGroup.add(leftHand);
+        player.add(leftArmGroup);
+
+        const rightArmGroup = new THREE.Group();
+        rightArmGroup.position.set(0.8, 2.0, 0);
+        const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.4, 0.7), shirtMat);
+        rightArm.position.y = -0.7; rightArm.castShadow = true; rightArmGroup.add(rightArm);
         const rightHand = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 0.7), skinMat);
-        rightHand.position.set(0.8, 0.45, 0); rightHand.castShadow = true; player.add(rightHand);
+        rightHand.position.y = -1.55; rightHand.castShadow = true; rightArmGroup.add(rightHand);
+        player.add(rightArmGroup);
 
-        // --- НОГИ ---
+        const leftLegGroup = new THREE.Group();
+        leftLegGroup.position.set(-0.3, 0.6, 0);
         const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.2, 0.7), pantsMat);
-        leftLeg.position.set(-0.3, 0, 0); leftLeg.castShadow = true; player.add(leftLeg);
-        const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.2, 0.7), pantsMat);
-        rightLeg.position.set(0.3, 0, 0); rightLeg.castShadow = true; player.add(rightLeg);
-
-        // Ботинки
+        leftLeg.position.y = -0.6; leftLeg.castShadow = true; leftLegGroup.add(leftLeg);
         const leftShoe = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.25, 0.85), shoeMat);
-        leftShoe.position.set(-0.3, -0.7, 0.05); leftShoe.castShadow = true; player.add(leftShoe);
-        const rightShoe = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.25, 0.85), shoeMat);
-        rightShoe.position.set(0.3, -0.7, 0.05); rightShoe.castShadow = true; player.add(rightShoe);
+        leftShoe.position.set(0, -1.3, 0.05); leftShoe.castShadow = true; leftLegGroup.add(leftShoe);
+        player.add(leftLegGroup);
 
-        // --- РЮКЗАК за спиной ---
+        const rightLegGroup = new THREE.Group();
+        rightLegGroup.position.set(0.3, 0.6, 0);
+        const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.2, 0.7), pantsMat);
+        rightLeg.position.y = -0.6; rightLeg.castShadow = true; rightLegGroup.add(rightLeg);
+        const rightShoe = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.25, 0.85), shoeMat);
+        rightShoe.position.set(0, -1.3, 0.05); rightShoe.castShadow = true; rightLegGroup.add(rightShoe);
+        player.add(rightLegGroup);
+
         const backpack = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.0, 0.4), backpackMat);
         backpack.position.set(0, 1.4, -0.55); backpack.castShadow = true; player.add(backpack);
-        // Карман на рюкзаке
         const backpackPocket = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.05), beltMat);
         backpackPocket.position.set(0, 1.15, -0.76); player.add(backpackPocket);
 
         scene.add(player);
 
-        // ==================== ПЛАТФОРМЫ ====================
         const platforms = [];
         const platformColors = [0x4CAF50, 0xFF9800, 0xE91E63, 0x9C27B0, 0x00BCD4, 0xFFEB3B];
 
@@ -276,7 +287,6 @@
 
         generatePathFrom(0, 0, 0, 30);
 
-        // ==================== ОБЛАКА ====================
         const cloudMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
         for (let i = 0; i < 20; i++) {
             const cloud = new THREE.Group();
@@ -289,17 +299,13 @@
             scene.add(cloud);
         }
 
-        // ==================== ФИЗИКА, УПРАВЛЕНИЕ И НАГРАДЫ ====================
         const playerState = {
             velocity: new THREE.Vector3(0, 0, 0),
             onGround: false,
             score: 0,
-            coins: 0,                 // ⭐ Монеты
+            coins: 0,
             visitedPlatforms: new Set(),
-            upgrades: {               // ⭐ Уровни улучшений
-                speed: 0,
-                jump: 0
-            }
+            upgrades: { speed: 0, jump: 0 }
         };
 
         player.position.set(0, 1.6, 0);
@@ -309,20 +315,17 @@
         window.addEventListener('keyup', (e) => keys[e.code] = false);
 
         const GRAVITY = -25;
-        // Базовые значения (без улучшений)
         const BASE_SPEED = 10;
         const BASE_JUMP = 13;
-        const UPGRADE_COST = 10;      // Стоимость одного улучшения
-        const SPEED_PER_LEVEL = 1.5;  // Прибавка к скорости за уровень
-        const JUMP_PER_LEVEL = 1.0;   // Прибавка к прыжку за уровень
+        const UPGRADE_COST = 10;
+        const SPEED_PER_LEVEL = 1.5;
+        const JUMP_PER_LEVEL = 1.0;
 
-        // Функции получения текущих значений с учётом улучшений
         function getMoveSpeed() { return BASE_SPEED + playerState.upgrades.speed * SPEED_PER_LEVEL; }
         function getJumpForce() { return BASE_JUMP + playerState.upgrades.jump * JUMP_PER_LEVEL; }
 
         const cameraDirection = new THREE.Vector3();
 
-        // ==================== КАМЕРА ====================
         function updateCamera() {
             const offset = new THREE.Vector3(0, 5, -10);
             const target = player.position.clone().add(offset);
@@ -333,24 +336,22 @@
             cameraDirection.normalize();
         }
 
-        // ==================== СТОЛКНОВЕНИЯ + МОНЕТЫ ====================
         function checkPlatformCollision() {
             playerState.onGround = false;
             const playerBottom = player.position.y - 0.6;
-            
+
             for (const plat of platforms) {
                 const platTop = plat.position.y + 0.5;
                 const dx = Math.abs(player.position.x - plat.position.x);
                 const dz = Math.abs(player.position.z - plat.position.z);
                 const halfSize = plat.geometry.parameters.width / 2;
-                
+
                 if (dx < halfSize && dz < halfSize) {
                     if (playerBottom <= platTop && playerBottom >= platTop - 0.5 && playerState.velocity.y <= 0) {
                         player.position.y = platTop + 0.6;
                         playerState.velocity.y = 0;
                         playerState.onGround = true;
-                        
-                        // ⭐ Награда: +1 монета за каждую новую платформу
+
                         if (!playerState.visitedPlatforms.has(plat)) {
                             playerState.visitedPlatforms.add(plat);
                             playerState.score++;
@@ -358,14 +359,13 @@
                             document.getElementById('score').textContent = 'Платформы: ' + playerState.score;
                             document.getElementById('coins').textContent = '🪙 Монеты: ' + playerState.coins;
                             showCoinPopup();
-                            updateShopButtons(); // Обновляем доступность кнопок магазина
+                            updateShopButtons();
                         }
                     }
                 }
             }
         }
 
-        // ⭐ Всплывающее уведомление "+1 🪙"
         function showCoinPopup() {
             const popup = document.createElement('div');
             popup.className = 'coin-popup';
@@ -376,7 +376,6 @@
             setTimeout(() => popup.remove(), 1000);
         }
 
-        // ==================== ГЕНЕРАЦИЯ И УДАЛЕНИЕ ====================
         function managePlatforms() {
             let farthest = platforms[platforms.length - 1];
             if (player.position.z > farthest.position.z - 40) {
@@ -388,7 +387,7 @@
                     createPlatform(lx, ly, lz, 5 + Math.random() * 2);
                 }
             }
-            
+
             for (let i = 0; i < platforms.length; i++) {
                 if (!platforms[i].userData.isStart && platforms[i].position.z < player.position.z - 30) {
                     scene.remove(platforms[i]);
@@ -400,31 +399,81 @@
             }
         }
 
-        // ==================== АНИМАЦИЯ ХОДЬБЫ ====================
         let walkTime = 0;
-        function animateWalk(isMoving) {
-            if (isMoving && playerState.onGround) {
-                walkTime += 0.2;
-                leftArm.rotation.x = Math.sin(walkTime) * 0.8;
-                rightArm.rotation.x = -Math.sin(walkTime) * 0.8;
-                leftLeg.rotation.x = -Math.sin(walkTime) * 0.8;
-                rightLeg.rotation.x = Math.sin(walkTime) * 0.8;
-                // Руки и кисти качаются синхронно
-                leftHand.rotation.x = Math.sin(walkTime) * 0.8;
-                rightHand.rotation.x = -Math.sin(walkTime) * 0.8;
-                // Ботинки тоже
-                leftShoe.rotation.x = -Math.sin(walkTime) * 0.8;
-                rightShoe.rotation.x = Math.sin(walkTime) * 0.8;
+        let jumpTime = 0;
+
+        function animateCharacter(isMoving, inAir, delta) {
+            propellerGroup.rotation.y += 0.3;
+
+            if (inAir) {
+                jumpTime += delta * 8;
+
+                const armSpread = Math.PI / 2.5;
+                const armWobble = Math.sin(jumpTime * 2) * 0.15;
+                leftArmGroup.rotation.z = -(armSpread + armWobble);
+                rightArmGroup.rotation.z = (armSpread + armWobble);
+
+                const legSpread = 0.4 + Math.sin(jumpTime * 2.5) * 0.15;
+                leftLegGroup.rotation.z = -(legSpread);
+                rightLegGroup.rotation.z = (legSpread);
+
+                headGroup.rotation.y = Math.sin(jumpTime * 3) * 0.8;
+                headGroup.rotation.z = Math.sin(jumpTime * 2.2) * 0.2;
+                headGroup.rotation.x = Math.sin(jumpTime * 1.7) * 0.15;
+
+                smile.visible = false;
+                mouthOpen.visible = true;
+                mouthBorder.visible = true;
+                const mouthScale = 1.0 + Math.sin(jumpTime * 4) * 0.3;
+                mouthOpen.scale.y = mouthScale;
+                mouthBorder.scale.y = mouthScale;
+
+                leftBrow.position.y = 0.28 + Math.sin(jumpTime * 3) * 0.05;
+                rightBrow.position.y = 0.28 + Math.sin(jumpTime * 3) * 0.05;
+
             } else {
-                const d = 0.8;
-                leftArm.rotation.x *= d; rightArm.rotation.x *= d;
-                leftLeg.rotation.x *= d; rightLeg.rotation.x *= d;
-                leftHand.rotation.x *= d; rightHand.rotation.x *= d;
-                leftShoe.rotation.x *= d; rightShoe.rotation.x *= d;
+                const lerpSpeed = 0.15;
+
+                headGroup.rotation.y *= (1 - lerpSpeed);
+                headGroup.rotation.z *= (1 - lerpSpeed);
+                headGroup.rotation.x *= (1 - lerpSpeed);
+
+                smile.visible = true;
+                mouthOpen.visible = false;
+                mouthBorder.visible = false;
+                mouthOpen.scale.y = 1;
+                mouthBorder.scale.y = 1;
+
+                leftBrow.position.y += (0.2 - leftBrow.position.y) * lerpSpeed;
+                rightBrow.position.y += (0.2 - rightBrow.position.y) * lerpSpeed;
+
+                if (isMoving) {
+                    walkTime += 0.2;
+
+                    leftArmGroup.rotation.x = Math.sin(walkTime) * 0.8;
+                    rightArmGroup.rotation.x = -Math.sin(walkTime) * 0.8;
+                    leftArmGroup.rotation.z *= (1 - lerpSpeed);
+                    rightArmGroup.rotation.z *= (1 - lerpSpeed);
+
+                    leftLegGroup.rotation.x = -Math.sin(walkTime) * 0.8;
+                    rightLegGroup.rotation.x = Math.sin(walkTime) * 0.8;
+                    leftLegGroup.rotation.z *= (1 - lerpSpeed);
+                    rightLegGroup.rotation.z *= (1 - lerpSpeed);
+
+                } else {
+                    walkTime = 0;
+                    leftArmGroup.rotation.x *= (1 - lerpSpeed);
+                    rightArmGroup.rotation.x *= (1 - lerpSpeed);
+                    leftArmGroup.rotation.z *= (1 - lerpSpeed);
+                    rightArmGroup.rotation.z *= (1 - lerpSpeed);
+                    leftLegGroup.rotation.x *= (1 - lerpSpeed);
+                    rightLegGroup.rotation.x *= (1 - lerpSpeed);
+                    leftLegGroup.rotation.z *= (1 - lerpSpeed);
+                    rightLegGroup.rotation.z *= (1 - lerpSpeed);
+                }
             }
         }
 
-        // ==================== МАГАЗИН ====================
         const shopEl = document.getElementById('shop');
         const shopBtn = document.getElementById('shopBtn');
         const closeShopBtn = document.getElementById('closeShop');
@@ -441,19 +490,15 @@
             shopEl.style.display = 'none';
         });
 
-        // Обновление кнопок магазина (доступность и уровни)
         function updateShopButtons() {
-            speedLevelEl.textContent = 'Уровень: ' + playerState.upgrades.speed + 
+            speedLevelEl.textContent = 'Уровень: ' + playerState.upgrades.speed +
                 ' (скорость: ' + getMoveSpeed().toFixed(1) + ')';
-            jumpLevelEl.textContent = 'Уровень: ' + playerState.upgrades.jump + 
+            jumpLevelEl.textContent = 'Уровень: ' + playerState.upgrades.jump +
                 ' (прыжок: ' + getJumpForce().toFixed(1) + ')';
-            
-            // Кнопка активна только если хватает монет
             buySpeedBtn.disabled = playerState.coins < UPGRADE_COST;
             buyJumpBtn.disabled = playerState.coins < UPGRADE_COST;
         }
 
-        // Покупка улучшения скорости
         buySpeedBtn.addEventListener('click', () => {
             if (playerState.coins >= UPGRADE_COST) {
                 playerState.coins -= UPGRADE_COST;
@@ -463,7 +508,6 @@
             }
         });
 
-        // Покупка улучшения прыжка
         buyJumpBtn.addEventListener('click', () => {
             if (playerState.coins >= UPGRADE_COST) {
                 playerState.coins -= UPGRADE_COST;
@@ -473,11 +517,10 @@
             }
         });
 
-        // ==================== РЕСТАРТ ====================
         function doRestart() {
             const msg = document.getElementById('restartMsg');
             msg.style.display = 'block';
-            setTimeout(() => msg.style.display = 'none', 1000);
+            setTimeout(() => msg.style.display = 'none', 1500);
 
             for (let i = platforms.length - 1; i >= 0; i--) {
                 if (!platforms[i].userData.isStart) {
@@ -498,7 +541,15 @@
             playerState.velocity.set(0, 0, 0);
             player.rotation.y = 0;
 
-            // ⭐ Сбрасываем только счёт платформ, монеты и улучшения сохраняются!
+            headGroup.rotation.set(0, 0, 0);
+            leftArmGroup.rotation.set(0, 0, 0);
+            rightArmGroup.rotation.set(0, 0, 0);
+            leftLegGroup.rotation.set(0, 0, 0);
+            rightLegGroup.rotation.set(0, 0, 0);
+            smile.visible = true;
+            mouthOpen.visible = false;
+            mouthBorder.visible = false;
+
             playerState.score = 0;
             playerState.visitedPlatforms.clear();
             document.getElementById('score').textContent = 'Платформы: 0';
@@ -511,7 +562,6 @@
             cameraDirection.normalize();
         }
 
-        // ==================== ГЛАВНЫЙ ЦИКЛ ====================
         const clock = new THREE.Clock();
 
         function animate() {
@@ -520,18 +570,17 @@
 
             const moveDir = new THREE.Vector3(0, 0, 0);
             const rightVector = new THREE.Vector3().crossVectors(cameraDirection, new THREE.Vector3(0, 1, 0)).normalize();
-            
+
             if (keys['KeyW'] || keys['ArrowUp']) moveDir.add(cameraDirection);
             if (keys['KeyS'] || keys['ArrowDown']) moveDir.sub(cameraDirection);
             if (keys['KeyA'] || keys['ArrowLeft']) moveDir.sub(rightVector);
             if (keys['KeyD'] || keys['ArrowRight']) moveDir.add(rightVector);
-            
+
             const isMoving = moveDir.length() > 0;
             if (isMoving) moveDir.normalize();
 
             if (isMoving) player.rotation.y = Math.atan2(moveDir.x, moveDir.z);
 
-            // ⭐ Используем значения с учётом улучшений
             const currentSpeed = getMoveSpeed();
             const currentJump = getJumpForce();
 
@@ -555,7 +604,10 @@
             }
 
             managePlatforms();
-            animateWalk(isMoving);
+
+            const inAir = !playerState.onGround;
+            animateCharacter(isMoving, inAir, delta);
+
             updateCamera();
             renderer.render(scene, camera);
         }
@@ -566,9 +618,7 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        // Первоначальное обновление магазина
         updateShopButtons();
-
         animate();
     </script>
 </body>
